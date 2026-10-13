@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pengembaraan Dino - Bahasa Melayu Tahun 2</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --sky:#8ed8ff;--green:#46b957;--dark:#17324d;--yellow:#ffd83d;
+  --panel:#fffdf4;--purple:#7a45c7;--red:#e94b4b;
+}
+body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;background:#eaf7ff;color:var(--dark)}
+button,input{font:inherit}
+.screen{min-height:100vh;display:none;align-items:center;justify-content:center;padding:18px}
+.screen.active{display:flex}
+.card{width:min(720px,100%);background:var(--panel);border:5px solid #2c4770;border-radius:24px;box-shadow:0 10px 0 #17324d;padding:24px;text-align:center}
+h1{margin:4px 0 8px;font-size:clamp(30px,7vw,54px);color:#6e3bb4;text-shadow:2px 3px #ffd83d}
+h2{margin:5px 0 14px;color:#315e91}
+.subtitle{font-size:18px;line-height:1.5}
+.story-box{background:#fff;border:3px dashed #7a45c7;border-radius:18px;padding:15px;text-align:left;line-height:1.5;max-height:220px;overflow:auto;margin:14px 0}
+label{display:block;text-align:left;font-weight:bold;margin:12px 0 6px}
+input{width:100%;padding:13px;border:3px solid #91b7d7;border-radius:13px;background:white}
+.btn{border:0;border-radius:15px;padding:13px 20px;margin:7px;background:#ffd83d;color:#17324d;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #d29f00}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #d29f00}
+.btn.primary{background:#7a45c7;color:white;box-shadow:0 5px 0 #4d2787}
+.btn.green{background:#4fc45d;box-shadow:0 5px 0 #248d31;color:white}
+.small{font-size:13px;color:#567}
+.rules{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:15px 0}
+.rule{padding:10px 5px;border-radius:14px;background:#eef6ff;font-size:14px;font-weight:bold}
+.emoji{font-size:30px;display:block}
+#gameScreen{padding:0;align-items:stretch}
+#gameWrap{width:100%;min-height:100vh;display:flex;flex-direction:column;background:var(--sky)}
+#hud{height:auto;min-height:62px;background:#fffdf4;border-bottom:4px solid #315e91;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:7px;z-index:10}
+.hudItem{background:#eaf3ff;border:2px solid #7da7cc;border-radius:12px;padding:7px 10px;font-weight:800}
+#world{position:relative;flex:1;overflow:hidden;min-height:calc(100dvh - 135px);background:linear-gradient(#8ed8ff 0 62%,#c8f1ff 62% 100%)}
+.cloud{position:absolute;width:95px;height:32px;background:white;border-radius:30px;opacity:.85}
+.cloud:before,.cloud:after{content:"";position:absolute;background:white;border-radius:50%}
+.cloud:before{width:42px;height:42px;left:15px;top:-20px}.cloud:after{width:55px;height:55px;right:8px;top:-28px}
+.hill{position:absolute;bottom:24%;width:0;height:0;border-left:150px solid transparent;border-right:150px solid transparent;border-bottom:190px solid #72c96e}
+.hill2{position:absolute;bottom:24%;width:0;height:0;border-left:190px solid transparent;border-right:190px solid transparent;border-bottom:140px solid #4fb75e}
+#ground{position:absolute;bottom:0;left:0;right:0;height:25%;min-height:95px;background:repeating-linear-gradient(135deg,#77ca4b 0 22px,#66ba3e 22px 44px);border-top:8px solid #3e8c3a}
+#player{position:absolute;width:52px;height:62px;left:8%;bottom:25%;z-index:5;transition:transform .05s linear}
+.avatar{position:relative;width:100%;height:100%}
+.avatar .head{position:absolute;width:34px;height:34px;left:9px;top:0;border-radius:50%;background:#f6bd84;border:3px solid #5a3527}
+.avatar .hair{position:absolute;width:36px;height:18px;left:8px;top:-2px;border-radius:20px 20px 8px 8px;background:#5a3527}
+.avatar .body{position:absolute;width:38px;height:30px;left:7px;top:31px;border-radius:12px 12px 7px 7px;background:#6b42c5;border:3px solid #4b2e8d}
+.avatar .shoe{position:absolute;width:18px;height:8px;bottom:0;border-radius:8px;background:#d84b3f}
+.avatar .shoe.a{left:7px}.avatar .shoe.b{right:7px}
+#player{will-change:left,bottom,transform}
+#player.jumping .avatar{animation:jumpSquash .22s ease-out}
+@keyframes jumpSquash{0%{transform:scale(1,0.88)}100%{transform:scale(1,1)}}
+.star,.diamond,.monster{position:absolute;z-index:4;display:flex;align-items:center;justify-content:center;user-select:none}
+.star{font-size:39px;filter:drop-shadow(0 3px 0 #8b6200);animation:float 1s ease-in-out infinite}
+.diamond{font-size:34px;animation:float 1.2s ease-in-out infinite}
+.monster{font-size:43px;animation:bob .5s ease-in-out infinite alternate}
+@keyframes float{50%{transform:translateY(-10px) rotate(7deg)}}@keyframes bob{to{transform:translateY(-5px)}}
+#toast{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:#fff;border:3px solid #315e91;border-radius:14px;padding:9px 15px;font-weight:800;display:none;z-index:20;box-shadow:0 4px 0 #315e91}
+#controls{height:73px;background:#fffdf4;border-top:3px solid #315e91;display:flex;align-items:center;justify-content:center;gap:22px}
+.ctrl{width:62px;height:52px;border-radius:15px;border:3px solid #315e91;background:#eaf3ff;font-size:25px;font-weight:bold;touch-action:none;cursor:pointer;box-shadow:0 4px 0 #9ab7d0}.ctrl:active{transform:translateY(3px);box-shadow:0 1px 0 #9ab7d0}
+#questionModal,#resultModal{position:fixed;inset:0;background:rgba(17,39,62,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modalCard{width:min(650px,100%);background:#fffdf4;border:5px solid #7a45c7;border-radius:24px;box-shadow:0 9px 0 #3e246c;padding:20px;text-align:center}
+.questionNo{font-weight:800;color:#7a45c7}.questionText{font-size:clamp(20px,4.5vw,30px);font-weight:900;line-height:1.35;margin:10px 0 15px}
+.answers{display:grid;gap:10px}.answer{border:3px solid #6c96b9;background:#edf7ff;border-radius:15px;padding:13px;font-weight:800;cursor:pointer}.answer:hover{background:#d9efff}
+.feedback{font-size:20px;font-weight:900;min-height:32px;margin-top:12px}
+.good{color:#168b39}.bad{color:#c52e2e}
+table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff}th,td{padding:9px;border-bottom:2px solid #d7e4ef}th{background:#7a45c7;color:white}tr:nth-child(even){background:#f0f7ff}
+.note{font-size:12px;color:#666;margin-top:12px}
+
+/* Paparan responsif laptop, tablet/iPad dan telefon pintar */
+html,body{width:100%;min-height:100%;overflow-x:hidden}
+#gameWrap{min-height:100dvh}
+#world{min-height:calc(100dvh - 140px)}
+#controls{padding:8px 16px;gap:clamp(14px,5vw,34px)}
+.ctrl{width:clamp(58px,8vw,78px);height:clamp(50px,7vw,66px);font-size:clamp(24px,4vw,34px);touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#jumpBtn{background:#ffd83d;border-color:#9b7510;box-shadow:0 5px 0 #b68b00}
+@media (min-width:768px){#gameWrap{max-width:1400px;margin:auto;box-shadow:0 0 30px rgba(0,0,0,.18)}#world{min-height:calc(100dvh - 140px)}#controls{height:82px}}
+@media (orientation:landscape) and (max-height:600px){#hud{min-height:48px;padding:4px}.hudItem{font-size:12px;padding:4px 7px}#controls{height:58px}.ctrl{height:44px;width:60px}.story-box{max-height:150px}}
+@media (pointer:coarse){.ctrl{min-width:64px;min-height:54px}.answer{min-height:54px}}
+@media(max-width:600px){
+  .rules{grid-template-columns:repeat(2,1fr)}
+  .card{padding:17px}
+  #world{min-height:calc(100dvh - 145px)}
+  .hudItem{font-size:13px;padding:6px 8px}
+}
+</style>
+</head>
+<body>
+
+<section id="startScreen" class="screen active">
+  <div class="card">
+    <h1>🌟 Pengembaraan Dino 🌟</h1>
+    <h2>Bahasa Melayu Tahun 2</h2>
+    <p class="subtitle"><b>Anak yang Baik</b> — fahami cerita Dino sambil mengembara!</p>
+    <div class="story-box">
+      <b>Cerita Dino:</b><br>
+      Dino ialah anak bongsu dalam keluarganya tetapi tidak manja. Ibu dan ayahnya mahu dia menjadi anak yang berjaya, jadi Dino belajar bersungguh-sungguh. Dino membantu keluarga dengan melakukan kerja rumah tanpa disuruh. Setiap pagi dia mengemas katil sendiri supaya tidak menyusahkan ibu. Selepas bersarapan, dia membasuh pinggan mangkuk. Dino juga menyayangi semua anggota keluarganya, iaitu ibu, ayah, abang, kakak dan adik.
+    </div>
+    <div class="rules">
+      <div class="rule"><span class="emoji">⭐</span>Kutip bintang<br>untuk soalan</div>
+      <div class="rule"><span class="emoji">💎</span>Berlian<br>+5 markah</div>
+      <div class="rule"><span class="emoji">👾</span>Elak raksasa<br>-5 markah</div>
+      <div class="rule"><span class="emoji">🏆</span>Jawab 20<br>soalan</div>
+    </div>
+    <label for="studentName">Nama murid</label>
+    <input id="studentName" maxlength="30" placeholder="Contoh: Amir">
+    <label for="studentClass">Kelas</label>
+    <input id="studentClass" maxlength="25" placeholder="Contoh: 2 Ibnu Khaldun">
+    <button class="btn primary" onclick="startGame()">🚀 MULA PENGEMBARAAN</button>
+    <button class="btn" onclick="showLeaderboard()">🏆 Papan Pendahulu</button>
+  </div>
+</section>
+
+<section id="gameScreen" class="screen">
+ <div id="gameWrap">
+  <div id="hud">
+    <div class="hudItem">👤 <span id="hudName">-</span></div>
+    <div class="hudItem">⭐ <span id="score">0</span></div>
+    <div class="hudItem">💎 <span id="diamonds">0</span></div>
+    <div class="hudItem">❓ <span id="qCount">0/20</span></div>
+    <div class="hudItem">⏱️ <span id="timer">00:00</span></div><div class="hudItem">⬆️ LOMPAT = Kutip ⭐ / Elak 👾</div>
+  </div>
+  <div id="world">
+    <div class="cloud" style="left:8%;top:12%"></div><div class="cloud" style="left:55%;top:18%"></div>
+    <div class="hill" style="left:2%"></div><div class="hill2" style="left:42%"></div>
+    <div id="ground"></div>
+    <div id="toast"></div>
+    <div id="player"><div class="avatar"><div class="hair"></div><div class="head"></div><div class="body"></div><div class="shoe a"></div><div class="shoe b"></div></div></div>
+  </div>
+  <div id="controls">
+    <button class="ctrl" id="leftBtn">◀</button>
+    <button class="ctrl" id="jumpBtn" aria-label="Lompat">⬆️</button>
+    <button class="ctrl" id="rightBtn">▶</button>
+  </div>
+ </div>
+</section>
+
+<div id="questionModal">
+ <div class="modalCard">
+  <div class="questionNo" id="questionNo"></div>
+  <div class="questionText" id="questionText"></div>
+  <div class="answers" id="answers"></div>
+  <div id="feedback" class="feedback"></div>
+ </div>
+</div>
+
+<div id="resultModal">
+ <div class="modalCard">
+  <h1>🏆 Tahniah!</h1>
+  <h2 id="resultTitle"></h2>
+  <p id="resultStats" class="subtitle"></p>
+  <div id="resultMessage"></div>
+  <button class="btn primary" onclick="location.reload()">🔄 Main Semula</button>
+  <button class="btn" onclick="showLeaderboard()">🏆 Lihat Papan Pendahulu</button>
+ </div>
+</div>
+
+<div id="leaderModal" style="position:fixed;inset:0;background:rgba(17,39,62,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:60">
+ <div class="modalCard">
+  <h2>🏆 Papan Pendahulu</h2>
+  <div id="leaderboard"></div>
+  <button class="btn primary" onclick="closeLeaderboard()">Tutup</button>
+  <p class="note">Versi asas menyimpan rekod pada peranti/browser ini. Untuk satu papan pendahulu yang dikongsi semua murid di telefon masing-masing, sambungkan Firebase menggunakan panduan di bahagian akhir kod ini.</p>
+ </div>
+</div>
+
+<script>
+/* ==========================================================
+   PENGEMBARAAN DINO - BAHASA MELAYU TAHUN 2
+   1 fail HTML: HTML + CSS + JavaScript
+   ========================================================== */
+
+const QUESTIONS = [
+ {q:"Siapakah nama watak utama dalam cerita?",a:["Dino","Amir","Hakim"],c:0},
+ {q:"Dino merupakan anak yang ke berapa dalam keluarganya?",a:["Anak sulung","Anak bongsu","Anak tengah"],c:1},
+ {q:"Walaupun anak bongsu, Dino bersikap bagaimana?",a:["Manja","Malas","Tidak manja"],c:2},
+ {q:"Siapakah yang mahu Dino menjadi anak yang berjaya?",a:["Ibu dan ayah","Guru dan rakan","Abang dan kakak"],c:0},
+ {q:"Apakah yang akan dilakukan oleh Dino supaya berjaya dalam pelajaran?",a:["Bermain sepanjang hari","Belajar bersungguh-sungguh","Tidur selepas pulang"],c:1},
+ {q:"Dino akan membuat kerja rumah tanpa...",a:["disuruh oleh sesiapa","membantu ibu","bangun pagi"],c:0},
+ {q:"Apakah yang Dino lakukan pada setiap pagi?",a:["Bermain bola","Mengemas katil sendiri","Menonton televisyen"],c:1},
+ {q:"Mengapakah Dino mengemas katil sendiri?",a:["Supaya dapat bermain","Supaya tidak menyusahkan ibu","Supaya dipuji kawan"],c:1},
+ {q:"Bilakah Dino membasuh pinggan mangkuk?",a:["Selepas bersarapan","Sebelum tidur","Sebelum pergi ke sekolah"],c:0},
+ {q:"Apakah sifat Dino yang dapat kita teladani?",a:["Rajin membantu keluarga","Suka membantah","Malas belajar"],c:0},
+ {q:"Siapakah yang terdapat dalam keluarga Dino?",a:["Ibu, ayah, abang, kakak dan adik","Guru dan rakan sahaja","Jiran dan kawan"],c:0},
+ {q:"Dino sayang akan semua anggota...",a:["sekolahnya","keluarganya","pasukannya"],c:1},
+ {q:"Apakah tujuan Dino belajar bersungguh-sungguh?",a:["Untuk berjaya dalam pelajaran","Untuk mendapat hadiah","Untuk mengelakkan kerja rumah"],c:0},
+ {q:"Antara berikut, yang manakah dilakukan Dino tanpa disuruh?",a:["Membuat kerja rumah","Membeli mainan","Pergi bercuti"],c:0},
+ {q:"Apakah yang boleh berlaku jika Dino tidak membantu ibunya?",a:["Ibu mungkin lebih terbeban","Dino menjadi juara","Keluarga pergi bermain"],c:0},
+ {q:"Apakah amalan baik Dino selepas bersarapan?",a:["Membasuh pinggan mangkuk","Tidur semula","Bermain komputer"],c:0},
+ {q:"Mengapakah kita wajar mencontohi Dino?",a:["Kerana Dino rajin dan penyayang","Kerana Dino suka bermain","Kerana Dino anak bongsu"],c:0},
+ {q:"Apakah hubungan Dino dengan ibu dan ayahnya?",a:["Dino menyayangi mereka","Dino tidak mengenali mereka","Dino selalu melawan mereka"],c:0},
+ {q:"Apakah pengajaran utama cerita Dino?",a:["Kita hendaklah rajin dan membantu keluarga","Kita mesti bermain setiap hari","Kita tidak perlu belajar"],c:0},
+ {q:"Pernyataan manakah paling tepat tentang Dino?",a:["Dino anak bongsu yang rajin, bertanggungjawab dan penyayang","Dino anak yang malas dan manja","Dino tidak suka membantu keluarga"],c:0}
+];
+
+let state={name:"",kelas:"",score:0,diamonds:0,questionIndex:0,start:0,elapsed:0,paused:false,answered:false};
+let keys={left:false,right:false};
+let player={x:0,y:0,vx:0,vy:0,onGround:true};
+let objects=[];
+let raf=null, timerInterval=null, questionOpen=false;
+
+const $=id=>document.getElementById(id);
+const world=()=> $("world");
+
+function startGame(){
+  const name=$("studentName").value.trim(), kelas=$("studentClass").value.trim();
+  if(!name||!kelas){alert("Sila masukkan nama dan kelas dahulu.");return;}
+  state={name,kelas,score:0,diamonds:0,questionIndex:0,start:Date.now(),elapsed:0,paused:false,answered:false};
+  $("hudName").textContent=name;
+  $("score").textContent="0"; $("diamonds").textContent="0"; $("qCount").textContent="0/20";
+  $("startScreen").classList.remove("active"); $("gameScreen").classList.add("active");
+  setupLevel(); startClock(); gameLoop();
+}
+
+function setupLevel(){
+  objects.forEach(o=>o.el.remove()); objects=[];
+  player.x=world().clientWidth*.08; player.y=0; player.vx=0; player.vy=0; player.onGround=true;
+  // Hanya beberapa bintang dipaparkan pada satu-satu masa.
+  // Bintang baharu akan muncul selepas setiap soalan dijawab sehingga cukup 20 soalan.
+  for(let i=0;i<6;i++) spawnStar(i);
+  for(let i=0;i<5;i++) spawnDiamond(i);
+  for(let i=0;i<2;i++) spawnMonster(i);
+  renderPlayer();
+}
+
+function createObj(cls,icon,x){
+  const el=document.createElement("div"); el.className=cls; el.textContent=icon;
+  el.style.left=x+"px"; el.style.bottom=(25+Math.random()*22)+"%"; world().appendChild(el);
+  const o={el,cls,x:Number(x),active:true};
+  objects.push(o); return o;
+}
+function spawnStar(i){
+  const w=Math.max(world().clientWidth,700);
+  // Agihkan bintang supaya murid perlu bergerak meneroka kawasan permainan.
+  const x = Math.max(90, Math.min(w-80, 150 + (i*137) % Math.max(220,w-220)));
+  const o = createObj("star","⭐", x);
+  o.el.style.bottom=(27+((i*17)%30))+"%";
+}
+function spawnDiamond(i){
+  const w=Math.max(world().clientWidth,700);
+  createObj("diamond","💎", 300+i*((w-360)/4));
+}
+function spawnMonster(i){
+  const w=Math.max(world().clientWidth,700);
+  createObj("monster","👾", 250+i*((w-300)/5));
+}
+
+function startClock(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    if(!state.paused){
+      state.elapsed=Math.floor((Date.now()-state.start)/1000);
+      $("timer").textContent=formatTime(state.elapsed);
+    }
+  },250);
+}
+function formatTime(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+
+function gameLoop(){
+  const w=world().clientWidth;
+  if(!state.paused){
+    let dir=(keys.right?1:0)-(keys.left?1:0);
+    player.vx += dir*.75; player.vx*=.82; player.vx=Math.max(-5,Math.min(5,player.vx));
+    player.x+=player.vx;
+    if(player.x<0)player.x=0;if(player.x>w-55)player.x=w-55;
+    // Fizik lompat: y positif = bergerak ke atas.
+    player.vy-=0.65; player.y+=player.vy;
+    if(player.y<=0){player.y=0;player.vy=0;player.onGround=true}
+    checkCollisions();
+    renderPlayer();
+  }
+  raf=requestAnimationFrame(gameLoop);
+}
+function renderPlayer(){
+  $("player").style.left=player.x+"px";
+  $("player").style.bottom=`calc(25% + ${player.y}px)`;
+  $("player").style.transform=`scaleX(${player.vx<-.2?-1:1})`;
+}
+function jump(){
+  if(questionOpen||state.paused)return;
+  // Lompat 2x lebih tinggi untuk mencapai bintang.
+  // y positif bergerak ke atas dan graviti menarik watak turun semula.
+  if(player.onGround){
+    player.vy=22;
+    player.onGround=false;
+    $("player").classList.add("jumping");
+    setTimeout(()=>$("player").classList.remove("jumping"),220);
+  }
+}
+function rect(el){
+  const r=el.getBoundingClientRect(); return {x:r.left,y:r.top,w:r.width,h:r.height};
+}
+function overlap(a,b){
+  return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;
+}
+function checkCollisions(){
+  const p=rect($("player"));
+  objects.forEach(o=>{
+    if(!o.active)return;
+    const r=rect(o.el);
+    if(overlap(p,r)){
+      if(o.cls==="star"){
+        o.active=false;o.el.remove(); state.questionIndex++;
+        $("qCount").textContent=state.questionIndex+"/20";
+        askQuestion(state.questionIndex-1);
+      }else if(o.cls==="diamond"){
+        o.active=false;o.el.remove();state.diamonds++;state.score+=5;
+        $("diamonds").textContent=state.diamonds;$("score").textContent=state.score;
+        toast("💎 Bonus +5 markah!");
+      }else if(o.cls==="monster"){
+        o.active=false;o.el.remove();state.score=Math.max(0,state.score-5);
+        $("score").textContent=state.score;toast("👾 Aduh! -5 markah. Elakkan raksasa!");
+        // Raksasa tidak muncul semula; jumlah kekal 2 sahaja.
+      }
+    }
+  });
+}
+function respawnMonster(){ /* Jumlah raksasa kekal 2 sahaja. */ }
+function toast(msg){
+  $("toast").textContent=msg;$("toast").style.display="block";
+  clearTimeout(window.toastT);window.toastT=setTimeout(()=>$("toast").style.display="none",1500);
+}
+
+function askQuestion(index){
+  state.paused=true;questionOpen=true;
+  const q=QUESTIONS[index];
+  $("questionNo").textContent=`SOALAN ${index+1} DARIPADA 20`;
+  $("questionText").textContent=q.q;
+  $("feedback").textContent="";$("feedback").className="feedback";
+  const box=$("answers");box.innerHTML="";
+  q.a.forEach((ans,i)=>{
+    const b=document.createElement("button");b.className="answer";b.textContent=String.fromCharCode(65+i)+". "+ans;
+    b.onclick=()=>answerQuestion(i,q.c,index);box.appendChild(b);
+  });
+  $("questionModal").style.display="flex";
+}
+function answerQuestion(choice,correct,index){
+  const btns=[...$("answers").children];btns.forEach(b=>b.disabled=true);
+  if(choice===correct){
+    state.score+=10;$("feedback").textContent="✅ Betul! +10 markah";$("feedback").className="feedback good";
+  }else{
+    $("feedback").textContent="❌ Belum tepat. Teruskan pengembaraan!";
+    $("feedback").className="feedback bad";
+  }
+  $("score").textContent=state.score;
+  setTimeout(()=>{
+    $("questionModal").style.display="none";questionOpen=false;
+    if(state.questionIndex>=20){
+      finishGame();
+    }else{
+      // Tambah satu bintang baharu untuk soalan seterusnya.
+      spawnStar(state.questionIndex+6);
+      state.paused=false;
+    }
+  },1100);
+}
+function finishGame(){
+  clearInterval(timerInterval); state.elapsed=Math.floor((Date.now()-state.start)/1000);
+  state.paused=true;
+  saveResult({name:state.name,kelas:state.kelas,score:state.score,time:state.elapsed,date:new Date().toLocaleString("ms-MY")});
+  $("resultTitle").textContent=state.name+" • "+state.kelas;
+  $("resultStats").innerHTML=`Markah: <b>${state.score}</b> &nbsp; | &nbsp; Berlian: <b>${state.diamonds}</b> &nbsp; | &nbsp; Masa: <b>${formatTime(state.elapsed)}</b>`;
+  let msg=state.score>=180?"🌟 Hebat! Kamu sangat memahami cerita Dino!":state.score>=140?"👏 Bagus! Teruskan usaha!":"💪 Syabas kerana menyelesaikan semua soalan. Cuba lagi untuk meningkatkan markah!";
+  $("resultMessage").innerHTML="<p>"+msg+"</p>";
+  $("resultModal").style.display="flex";
+}
+function saveResult(row){
+  const key="dinoLeaderboard";
+  let data=JSON.parse(localStorage.getItem(key)||"[]");
+  data.push(row);data.sort((a,b)=>b.score-a.score||a.time-b.time);data=data.slice(0,20);
+  localStorage.setItem(key,JSON.stringify(data));
+}
+function showLeaderboard(){
+  const data=JSON.parse(localStorage.getItem("dinoLeaderboard")||"[]");
+  let html=data.length?`<table><tr><th>#</th><th>Nama</th><th>Kelas</th><th>Markah</th><th>Masa</th></tr>`:"<p>Belum ada rekod.</p>";
+  data.forEach((r,i)=>html+=`<tr><td>${i+1}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.kelas)}</td><td>${r.score}</td><td>${formatTime(r.time)}</td></tr>`);
+  if(data.length)html+="</table>";
+  $("leaderboard").innerHTML=html;$("leaderModal").style.display="flex";
+}
+function closeLeaderboard(){$("leaderModal").style.display="none"}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+$("leftBtn").addEventListener("pointerdown",e=>{e.preventDefault();keys.left=true});
+$("leftBtn").addEventListener("pointerup",()=>keys.left=false);$("leftBtn").addEventListener("pointerleave",()=>keys.left=false);
+$("rightBtn").addEventListener("pointerdown",e=>{e.preventDefault();keys.right=true});
+$("rightBtn").addEventListener("pointerup",()=>keys.right=false);$("rightBtn").addEventListener("pointerleave",()=>keys.right=false);
+$("jumpBtn").addEventListener("pointerdown",e=>{e.preventDefault();jump()});
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft"||e.key==="a")keys.left=true;
+  if(e.key==="ArrowRight"||e.key==="d")keys.right=true;
+  if(e.key==="ArrowUp"||e.key===" "||e.key==="w")jump();
+});
+document.addEventListener("keyup",e=>{
+  if(e.key==="ArrowLeft"||e.key==="a")keys.left=false;
+  if(e.key==="ArrowRight"||e.key==="d")keys.right=false;
+});
+
+/*
+============================================================
+PAPAN PENDAHULU DI SEMUA PERANTI (PILIHAN)
+============================================================
+GitHub Pages sendiri ialah hosting statik, jadi localStorage hanya
+berkongsi rekod pada browser/peranti yang sama.
+
+Jika cikgu mahu SEMUA murid melihat papan pendahulu yang sama:
+1. Cipta projek Firebase.
+2. Aktifkan Realtime Database.
+3. Ambil Firebase Web App configuration.
+4. Tambahkan Firebase SDK dan fungsi set/push/onValue.
+5. Gantikan saveResult() dan showLeaderboard() dengan operasi Firebase.
+
+Struktur data yang dicadangkan:
+leaderboard/{autoId}
+  name, kelas, score, time, date
+
+Versi ini sengaja boleh terus dimainkan tanpa akaun Firebase.
+*/
+</script>
+</body>
+</html>
